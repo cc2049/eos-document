@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "buildCommand": "pnpm install && pnpm run build",
+  "outputDirectory": "docs/.vitepress/dist",
+  "installCommand": "npm install -g pnpm@8 && pnpm install",
+  "framework": "vitepress",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

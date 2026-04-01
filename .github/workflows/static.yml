@@ -42,7 +42,10 @@ jobs:
 
       # 4. 构建项目
       - name: Build
-        run: pnpm docs:build # 或者是你的 build 脚本名称
+        run: pnpm docs:build
+        env:
+          # 👇 增加这一行，将内存限制提高到 4GB
+          NODE_OPTIONS: --max_old_space_size=4096
 
       # 5. 上传构件 (关键：确保路径正确)
       - name: Upload artifact

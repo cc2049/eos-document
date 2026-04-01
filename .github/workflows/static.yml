@@ -21,35 +21,35 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0 # 需要获取所有历史记录来确保构建正确
 
+      # 1. 先安装 pnpm
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9 # 或者 latest
+
+      # 2. 再安装 Node.js (并自动配置缓存)
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: pnpm
+          cache: pnpm # 这里会自动缓存 pnpm 的依赖
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: latest
-
+      # 3. 安装依赖
       - name: Install dependencies
         run: pnpm install
 
+      # 4. 构建项目
       - name: Build
-        run: pnpm docs:build
+        run: pnpm docs:build # 或者是你的 build 脚本名称
 
-      # 👇 新增：调试步骤，查看文件到底在哪里
-      - name: List files
-        run: |
-          echo "Checking directory structure..."
-          ls -R
-
+      # 5. 上传构件 (关键：确保路径正确)
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # 👇 根据实际情况修改路径，通常是下面这个
+          # ⚠️ 请根据你的实际项目结构调整这里
+          # 如果是标准 VitePress 项目，通常是下面这个路径
           path: docs/.vitepress/dist
 
   deploy:

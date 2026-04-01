@@ -23,28 +23,26 @@ jobs:
         with:
           fetch-depth: 0
 
-      # 1. 设置 Node.js 并开启 pnpm 缓存
+      # 1. 安装 Node.js
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: pnpm # 👈 这里明确指定使用 pnpm
+          cache: pnpm # 开启 pnpm 缓存
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
+      # 2. 【新增步骤】安装 pnpm 本身
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: latest # 自动安装最新版 pnpm
 
-      # 2. 安装 pnpm 并安装依赖
       - name: Install dependencies
-        run: |
-          npm install -g pnpm # 👈 先全局安装 pnpm
-          pnpm install        # 👈 使用 pnpm 安装依赖
+        run: pnpm install # 现在可以使用 pnpm 了
 
-      # 3. 构建项目
       - name: Build
-        run: pnpm run build   # 👈 使用 pnpm 运行构建命令
+        run: pnpm run build # 使用 pnpm 运行构建
 
-      # 4. 上传产物 (注意路径是否正确)
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: docs/.vitepress/dist # 👈 确保这是你实际的输出目录
+          path: docs/.vitepress/dist

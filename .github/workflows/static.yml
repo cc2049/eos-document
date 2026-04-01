@@ -1,0 +1,56 @@
+# 这个文件会自动触发 GitHub Pages 部署
+name: Deploy VitePress site to Pages
+
+on:
+  push:
+    branches: [main] # 这里的 main 是你的源码分支
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # 获取所有历史记录，以防需要
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm # 缓存依赖以加速构建
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Install dependencies
+        run: npm ci # 安装依赖
+
+      - name: Build with VitePress
+        run: npm run docs:build # 执行构建命令，注意：请确保你的 package.json 里有这个命令
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/.vitepress/dist # 这里的路径必须指向 VitePress 的输出目录
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

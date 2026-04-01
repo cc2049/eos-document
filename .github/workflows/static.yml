@@ -34,4 +34,5 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: .vitepress/dist # 根据你的实际输出目录调整
+          # 👇 重点：明确指定 VitePress 的输出目录
+          path: docs/.vitepress/dist

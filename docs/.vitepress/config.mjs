@@ -4,6 +4,7 @@ import { externalMdIndexPlugin } from './plugins/externalMdIndex.js';
 export default defineConfig({
   title: '易思文档中心',
   description: '易思文档中心',
+  base: '/eos-document/',
   head: [['link', { rel: 'icon', href: '/favicon.ico' }]],
   lang: 'zh-cn',
   themeConfig: {

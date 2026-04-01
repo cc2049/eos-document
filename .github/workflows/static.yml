@@ -28,21 +28,21 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: pnpm # 开启 pnpm 缓存
+          cache: pnpm # 👈 开启 pnpm 缓存
 
-      # 2. 【新增步骤】安装 pnpm 本身
+      # 2. 【新增步骤】安装 pnpm 工具本身
       - name: Setup pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v4
         with:
           version: latest # 自动安装最新版 pnpm
 
       - name: Install dependencies
-        run: pnpm install # 现在可以使用 pnpm 了
+        run: pnpm install # 👈 使用 pnpm 安装依赖
 
       - name: Build
-        run: pnpm run build # 使用 pnpm 运行构建
+        run: pnpm run build # 👈 使用 pnpm 运行构建
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: docs/.vitepress/dist
+          path: docs/.vitepress/dist # 👈 确认你的构建输出目录

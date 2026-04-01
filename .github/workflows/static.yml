@@ -23,35 +23,28 @@ jobs:
         with:
           fetch-depth: 0
 
+      # 1. 设置 Node.js 并开启 pnpm 缓存
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
+          cache: pnpm # 👈 这里明确指定使用 pnpm
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
+      # 2. 安装 pnpm 并安装依赖
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm install -g pnpm # 👈 先全局安装 pnpm
+          pnpm install        # 👈 使用 pnpm 安装依赖
 
-      # ✅ 这里使用了你 package.json 中正确的命令
-      - name: Build with VitePress
-        run: npm run build
+      # 3. 构建项目
+      - name: Build
+        run: pnpm run build   # 👈 使用 pnpm 运行构建命令
 
+      # 4. 上传产物 (注意路径是否正确)
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # ✅ 这里指向了你项目中的正确输出目录
-          path: docs/.vitepress/dist
-
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          path: docs/.vitepress/dist # 👈 确保这是你实际的输出目录

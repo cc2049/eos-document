@@ -12,7 +12,7 @@ permissions:
 
 concurrency:
   group: pages
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -21,38 +21,54 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # 需要获取所有历史记录来确保构建正确
+          fetch-depth: 0
 
-      # 1. 先安装 pnpm
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 9 # 或者 latest
+          version: 9
 
-      # 2. 再安装 Node.js (并自动配置缓存)
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: pnpm # 这里会自动缓存 pnpm 的依赖
+          cache: pnpm
 
-      # 3. 安装依赖
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            **/node_modules
+            **/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
+        continue-on-error: false
 
-      # 4. 构建项目
       - name: Build
         run: pnpm docs:build
         env:
-          # 👇 增加这一行，将内存限制提高到 4GB
           NODE_OPTIONS: --max_old_space_size=4096
+        continue-on-error: false
 
-      # 5. 上传构件 (关键：确保路径正确)
+      - name: Verify build output
+        run: |
+          if [ ! -d "docs/.vitepress/dist" ]; then
+            echo "Build output directory not found!"
+            exit 1
+          fi
+          if [ ! -f "docs/.vitepress/dist/index.html" ]; then
+            echo "Index.html not found in build output!"
+            exit 1
+          fi
+          echo "Build verification passed!"
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # ⚠️ 请根据你的实际项目结构调整这里
-          # 如果是标准 VitePress 项目，通常是下面这个路径
           path: docs/.vitepress/dist
 
   deploy:
@@ -65,3 +81,23 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+  verify-deployment:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for deployment
+        run: sleep 60
+
+      - name: Verify deployment
+        run: |
+          # 由于部署 URL 是在 deploy 任务中生成的，我们需要使用正确的引用方式
+          # 这里直接使用 GitHub Pages 的默认 URL 格式
+          REPO_NAME=$(echo "${{ github.repository }}" | cut -d'/' -f2)
+          DEPLOY_URL="https://${{ github.repository_owner }}.github.io/$REPO_NAME/"
+          echo "Verifying deployment at: $DEPLOY_URL"
+          curl -s -o /dev/null -w "%{http_code}" "$DEPLOY_URL" | grep -E '^20[0-9]$' || {
+            echo "Deployment verification failed"
+            exit 1
+          }
+          echo "Deployment verification passed!"

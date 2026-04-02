@@ -2,7 +2,10 @@
   "scripts": {
     "dev": "vitepress dev docs",
     "build": "vitepress build docs",
-    "preview": "vitepress preview docs"
+    "docs:build": "vitepress build docs",
+    "preview": "vitepress preview docs",
+    "lint": "echo 'No lint configured'",
+    "test": "echo 'No test configured'"
   },
   "dependencies": {
     "markdown-it": "^14.1.1",
@@ -13,5 +16,8 @@
   "devDependencies": {
     "http-proxy-middleware": "^3.0.5",
     "vitepress": "^1.6.4"
+  },
+  "engines": {
+    "node": ">=16.0.0"
   }
 }

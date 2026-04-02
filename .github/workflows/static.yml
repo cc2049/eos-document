@@ -24,18 +24,18 @@ jobs:
           fetch-depth: 0
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v3
         with:
-          version: 9
+          version: 8
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 18
           cache: pnpm
 
       - name: Cache dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v3
         with:
           path: |
             **/node_modules
@@ -49,12 +49,12 @@ jobs:
           echo "Checking network connectivity..."
           ping -c 3 google.com
           echo "Checking external document server..."
-          curl -I http://116.204.83.177:8028 || echo "External server not reachable, continuing build..."
+          curl -I http://116.204.83.177:8028 --connect-timeout 10 || echo "External server not reachable, continuing build..."
 
       - name: Install dependencies
         run: |
           echo "Installing dependencies..."
-          pnpm install --frozen-lockfile --verbose
+          pnpm install --frozen-lockfile
         continue-on-error: false
 
       - name: Build
@@ -64,18 +64,12 @@ jobs:
           echo "Node version: $(node -v)"
           echo "pnpm version: $(pnpm -v)"
           echo "Starting build..."
-          set -x
-          pnpm docs:build 2>&1 | tee build.log
-          set +x
-          echo "Build completed with exit code: $?"
-          echo "Build log tail:"
-          tail -50 build.log
+          pnpm docs:build
         env:
           NODE_OPTIONS: --max_old_space_size=8192
-          VITEPRESS_EXTERNAL_MD_TIMEOUT: 60000
-          DEBUG: vitepress:*
+          VITEPRESS_EXTERNAL_MD_TIMEOUT: 30000
         continue-on-error: false
-        timeout-minutes: 30
+        timeout-minutes: 20
 
       - name: Verify build output
         run: |
@@ -114,12 +108,10 @@ jobs:
 
       - name: Verify deployment
         run: |
-          # 由于部署 URL 是在 deploy 任务中生成的，我们需要使用正确的引用方式
-          # 这里直接使用 GitHub Pages 的默认 URL 格式
           REPO_NAME=$(echo "${{ github.repository }}" | cut -d'/' -f2)
           DEPLOY_URL="https://${{ github.repository_owner }}.github.io/$REPO_NAME/"
           echo "Verifying deployment at: $DEPLOY_URL"
-          curl -s -o /dev/null -w "%{http_code}" "$DEPLOY_URL" | grep -E '^20[0-9]$' || {
+          curl -s -o /dev/null -w "%{http_code}" "$DEPLOY_URL" --connect-timeout 10 | grep -E '^20[0-9]$' || {
             echo "Deployment verification failed"
             exit 1
           }

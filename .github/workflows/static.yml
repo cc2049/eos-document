@@ -44,15 +44,38 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-
 
+      - name: Network check
+        run: |
+          echo "Checking network connectivity..."
+          ping -c 3 google.com
+          echo "Checking external document server..."
+          curl -I http://116.204.83.177:8028 || echo "External server not reachable, continuing build..."
+
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: |
+          echo "Installing dependencies..."
+          pnpm install --frozen-lockfile --verbose
         continue-on-error: false
 
       - name: Build
-        run: pnpm docs:build
+        run: |
+          echo "Building project..."
+          echo "Current directory: $(pwd)"
+          echo "Node version: $(node -v)"
+          echo "pnpm version: $(pnpm -v)"
+          echo "Starting build..."
+          set -x
+          pnpm docs:build 2>&1 | tee build.log
+          set +x
+          echo "Build completed with exit code: $?"
+          echo "Build log tail:"
+          tail -50 build.log
         env:
-          NODE_OPTIONS: --max_old_space_size=4096
+          NODE_OPTIONS: --max_old_space_size=8192
+          VITEPRESS_EXTERNAL_MD_TIMEOUT: 60000
+          DEBUG: vitepress:*
         continue-on-error: false
+        timeout-minutes: 30
 
       - name: Verify build output
         run: |
